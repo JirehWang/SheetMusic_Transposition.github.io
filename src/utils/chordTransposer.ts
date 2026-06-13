@@ -1,3 +1,5 @@
+import { normalizeAccidentalSymbols, parseChordName } from './chordRecognition';
+
 // Semitone index mappings
 const SHARPS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLATS  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
@@ -40,20 +42,17 @@ export function semitoneToNote(semitone: number, preferSharps = true): string {
 
 // Check if a word is a chord
 export function isChord(word: string): boolean {
-  // Regex to match root note [A-G][#b]?
-  // Suffix must be composed entirely of valid chord parts (numbers, symbols, or specific abbreviations)
-  // Optional bass note /[A-G][#b]?
-  const regex = /^[A-G](?:#|b)?(?:maj|min|sus|add|dim|aug|alt|ma|mi|m|M|[0-9]|#|b|\+|\-|\(|\)|ø|Δ|o|\*)*(?:\/[A-G](?:#|b)?)?$/;
-  return regex.test(word.trim());
+  return parseChordName(word) !== null;
 }
 
 // Transpose a single chord string (e.g., C#m7/E) by semitones
 export function transposeChord(chord: string, semitones: number, preferSharps = true): string {
   if (!chord) return '';
+  const normalizedChord = normalizeAccidentalSymbols(chord);
   
   // Extract parts: Root + Suffix + Bass
   // Example: C#m7/E -> root: C#, suffix: m7, bass: E
-  const match = chord.match(/^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/);
+  const match = normalizedChord.match(/^([A-G][#b]?)([^/]*)(?:\/([A-G][#b]?))?$/);
   if (!match) return chord; // Return original if it doesn't match standard chord structure
 
   const root = match[1];
