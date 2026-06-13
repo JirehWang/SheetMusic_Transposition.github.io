@@ -7,6 +7,7 @@ import {
 } from './chordRecognition';
 import { detectAccidentalTemplates, type ImageDataLike } from './accidentalTemplateMatcher';
 import { assessExtractedPdfText } from './pdfTextQuality';
+import { normalizeGasOmrResponse } from './gasOmrClient';
 
 function assertEqual(actual: unknown, expected: unknown, message: string) {
   if (actual === expected) {
@@ -137,6 +138,18 @@ assertEqual(
   assessExtractedPdfText(badPrintedAppShell).reason,
   "too_short",
   "Explains page shell extraction as too short after noise removal"
+);
+
+// 10. Test GAS OMR response normalization
+assertEqual(
+  normalizeGasOmrResponse({ ok: true, title: "Song", chordText: "C G Am F" }).text,
+  "C G Am F",
+  "Accepts GAS chordText output"
+);
+assertEqual(
+  normalizeGasOmrResponse({ ok: true, type: "abc", abc: "X:1\nK:C\nCDEF" }).type,
+  "abc",
+  "Accepts GAS ABC output"
 );
 
 console.log("\n🎉 All tests passed successfully!");

@@ -3,6 +3,7 @@ import PdfViewer from './components/PdfViewer';
 import ChordEditor from './components/ChordEditor';
 import AbcEditor from './components/AbcEditor';
 import { DEFAULT_ABC_TEMPLATE, DEFAULT_CHORD_TEMPLATE } from './utils/abcTransposer';
+import { transcribePdfWithGas } from './utils/gasOmrClient';
 import { Music, FileText, Database, Eye, EyeOff } from 'lucide-react';
 import './App.css';
 
@@ -19,6 +20,7 @@ function App() {
   // GAS states
   const [gasUrl, setGasUrl] = useState<string>(() => localStorage.getItem('gas_api_url') || '');
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isOmrRunning, setIsOmrRunning] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   // Load templates when toggling sheet types
@@ -44,6 +46,37 @@ function App() {
 
   const handlePdfLoaded = (fileName: string) => {
     setPdfFileName(fileName);
+  };
+
+  const handleGasOmr = async (file: File) => {
+    if (!gasUrl.trim()) {
+      alert('請先貼上 GAS Web App URL，再使用 GAS 讀譜。');
+      return;
+    }
+
+    setIsOmrRunning(true);
+    setSyncMessage({ text: 'GAS 讀譜中，請稍候...', isError: false });
+
+    try {
+      const result = await transcribePdfWithGas(gasUrl.trim(), file);
+      setSheetType(result.type);
+      setInputText(result.text);
+      setTitle(result.title || `${file.name.replace(/\.[^/.]+$/, '')} (GAS 讀譜)`);
+      setSemitones(0);
+      setSyncMessage({ text: 'GAS 讀譜完成，已載入編輯器。', isError: false });
+    } catch (error: unknown) {
+      console.error('GAS OMR Error:', error);
+      const message = error instanceof Error
+        ? error.message
+        : 'GAS 讀譜失敗，請檢查 Apps Script 後端設定。';
+      setSyncMessage({
+        text: message,
+        isError: true,
+      });
+      alert(message);
+    } finally {
+      setIsOmrRunning(false);
+    }
   };
 
   // Save GAS API URL to local storage
@@ -222,6 +255,9 @@ function App() {
             <PdfViewer 
               onTextExtracted={handleTextExtracted} 
               onFileLoaded={handlePdfLoaded} 
+              onOmrRequested={handleGasOmr}
+              omrRunning={isOmrRunning}
+              gasAvailable={Boolean(gasUrl.trim())}
             />
           </section>
         )}

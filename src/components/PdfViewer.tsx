@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { Upload, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileText, Loader2 } from 'lucide-react';
+import { Upload, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileText, Loader2, Search } from 'lucide-react';
 import styles from './PdfViewer.module.css';
 import { assessExtractedPdfText } from '../utils/pdfTextQuality';
 
@@ -11,14 +11,24 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 interface PdfViewerProps {
   onTextExtracted: (text: string) => void;
   onFileLoaded: (fileName: string) => void;
+  onOmrRequested?: (file: File) => Promise<void>;
+  omrRunning?: boolean;
+  gasAvailable?: boolean;
 }
 
-export default function PdfViewer({ onTextExtracted, onFileLoaded }: PdfViewerProps) {
+export default function PdfViewer({
+  onTextExtracted,
+  onFileLoaded,
+  onOmrRequested,
+  omrRunning = false,
+  gasAvailable = false,
+}: PdfViewerProps) {
   const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
   const [pageNum, setPageNum] = useState<number>(1);
   const [numPages, setNumPages] = useState<number>(0);
   const [zoom, setZoom] = useState<number>(1.2);
   const [fileName, setFileName] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [extracting, setExtracting] = useState<boolean>(false);
 
@@ -30,6 +40,7 @@ export default function PdfViewer({ onTextExtracted, onFileLoaded }: PdfViewerPr
   const loadPdf = async (file: File) => {
     setLoading(true);
     setFileName(file.name);
+    setSelectedFile(file);
     onFileLoaded(file.name);
     
     try {
@@ -197,6 +208,15 @@ export default function PdfViewer({ onTextExtracted, onFileLoaded }: PdfViewerPr
     setZoom(prev => Math.max(0.5, prev - 0.1));
   };
 
+  const handleOmrClick = async () => {
+    if (!selectedFile || !onOmrRequested) return;
+    if (!gasAvailable) {
+      alert('請先在上方貼上 GAS Web App URL，再使用 GAS 讀譜。');
+      return;
+    }
+    await onOmrRequested(selectedFile);
+  };
+
   return (
     <div className={styles.container}>
       {/* Upload area or toolbar */}
@@ -256,6 +276,22 @@ export default function PdfViewer({ onTextExtracted, onFileLoaded }: PdfViewerPr
               )}
               <span>擷取文字</span>
             </button>
+
+            {onOmrRequested && (
+              <button
+                onClick={handleOmrClick}
+                disabled={omrRunning || !selectedFile}
+                className={styles.omrBtn}
+                title={gasAvailable ? '使用 GAS 後端讀譜' : '請先貼上 GAS Web App URL'}
+              >
+                {omrRunning ? (
+                  <Loader2 size={16} className={styles.spin} />
+                ) : (
+                  <Search size={16} />
+                )}
+                <span>{omrRunning ? '讀譜中...' : 'GAS 讀譜'}</span>
+              </button>
+            )}
             
             <button onClick={triggerUpload} className={styles.reuploadBtn}>
               重新上傳

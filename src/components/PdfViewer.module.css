@@ -141,6 +141,27 @@
   cursor: not-allowed;
 }
 
+.omrBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--warning-color);
+  color: #0b0f19;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.omrBtn:hover:not(:disabled) {
+  background-color: #f5b041;
+}
+
+.omrBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .reuploadBtn {
   font-size: 0.8125rem;
   color: var(--text-muted);
