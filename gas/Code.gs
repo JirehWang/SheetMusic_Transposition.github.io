@@ -58,7 +58,7 @@ function transcribeSheetMusic(data) {
   if (!omrServiceUrl) {
     return jsonOutput({
       ok: false,
-      error: 'Missing Script Property: OMR_SERVICE_URL. GAS cannot run Audiveris/OpenCV directly; set this to an HTTP service that runs the OMR pipeline and returns chordText, abc, or musicXml.',
+      error: 'Missing Script Property: OMR_SERVICE_URL. Staff-notation reading requires an Audiveris/OpenCV HTTP service. Deploy omr-service/ and set OMR_SERVICE_URL to its /transcribe endpoint.',
     });
   }
 

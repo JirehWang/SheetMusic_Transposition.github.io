@@ -1,4 +1,4 @@
-import { musicXmlToChordSheet } from './musicXmlToChordSheet';
+import { musicXmlToAbc, musicXmlToChordSheet } from './musicXmlToChordSheet';
 
 export interface GasOmrResponse {
   ok: boolean;
@@ -59,14 +59,20 @@ export function normalizeGasOmrResponse(response: GasOmrResponse): NormalizedOmr
   }
 
   if (payload.musicXml) {
-    const text = musicXmlToChordSheet(payload.musicXml);
-    if (text) {
+    const chordText = musicXmlToChordSheet(payload.musicXml);
+    if (chordText) {
       return {
         title: payload.title,
         type: 'chord',
-        text,
+        text: chordText,
       };
     }
+
+    return {
+      title: payload.title,
+      type: 'abc',
+      text: musicXmlToAbc(payload.musicXml, payload.title),
+    };
   }
 
   throw new Error('GAS 讀譜完成，但沒有回傳可轉調的 chordText、ABC 或 MusicXML。');
