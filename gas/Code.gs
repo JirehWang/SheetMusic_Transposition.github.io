@@ -4,6 +4,10 @@ function jsonOutput(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function healthCheck() {
+  return 'ok';
+}
+
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents || '{}');
