@@ -7,6 +7,8 @@ import { transcribePdfWithGas } from './utils/gasOmrClient';
 import { Music, FileText, Database, Eye, EyeOff } from 'lucide-react';
 import './App.css';
 
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxStUV4yxvREiBeCijRDAV7SDP2pACk2TmSIyXP8Hohk7MSDFIbtmcY5quyUbOozkpN9Q/exec';
+
 function App() {
   const [sheetType, setSheetType] = useState<'chord' | 'abc'>('chord');
   const [semitones, setSemitones] = useState<number>(0);
@@ -18,7 +20,7 @@ function App() {
   const [pdfFileName, setPdfFileName] = useState<string>('');
 
   // GAS states
-  const [gasUrl, setGasUrl] = useState<string>(() => localStorage.getItem('gas_api_url') || '');
+  const [gasUrl, setGasUrl] = useState<string>(() => localStorage.getItem('gas_api_url') || DEFAULT_GAS_URL);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [isOmrRunning, setIsOmrRunning] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<{ text: string; isError: boolean } | null>(null);
