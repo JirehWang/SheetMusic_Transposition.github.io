@@ -6,6 +6,7 @@ import {
   parseChordName,
 } from './chordRecognition';
 import { detectAccidentalTemplates, type ImageDataLike } from './accidentalTemplateMatcher';
+import { assessExtractedPdfText } from './pdfTextQuality';
 
 function assertEqual(actual: unknown, expected: unknown, message: string) {
   if (actual === expected) {
@@ -115,5 +116,27 @@ const matches = detectAccidentalTemplates(
 assertEqual(matches.length, 1, "Detects one sharp template match");
 assertEqual(matches[0].accidental, "sharp", "Classifies the sharp template match");
 assertEqual(`${matches[0].x},${matches[0].y}`, "1,1", "Locates the sharp template match");
+
+// 9. Test PDF text extraction quality gate
+const goodExtractedChordSheet = [
+  "C      G      Am     F",
+  "Praise is rising, hearts are turning to You",
+  "F      G      C",
+  "We turn to You",
+].join("\n");
+const badPrintedAppShell = [
+  "讚美中信心不斷升起  C 調  ( 已擷取 )",
+  "1",
+  "1",
+  "2026/6/13 上午 10:13 SheetMusic Transpose - 樂譜移調工作台",
+  "https://jirehwang.github.io/SheetMusic_Transposition.github.io/ 1/3",
+].join("\n");
+assertEqual(assessExtractedPdfText(goodExtractedChordSheet).ok, true, "Accepts a real extracted chord sheet");
+assertEqual(assessExtractedPdfText(badPrintedAppShell).ok, false, "Rejects printed app shell/page noise");
+assertEqual(
+  assessExtractedPdfText(badPrintedAppShell).reason,
+  "too_short",
+  "Explains page shell extraction as too short after noise removal"
+);
 
 console.log("\n🎉 All tests passed successfully!");

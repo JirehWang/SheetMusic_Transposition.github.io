@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { Upload, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileText, Loader2 } from 'lucide-react';
 import styles from './PdfViewer.module.css';
+import { assessExtractedPdfText } from '../utils/pdfTextQuality';
 
 // Configure pdfjs worker using Vite's URL asset import
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
@@ -165,6 +166,12 @@ export default function PdfViewer({ onTextExtracted, onFileLoaded }: PdfViewerPr
       }
 
       const extractedText = resultLines.join('\n');
+      const assessment = assessExtractedPdfText(extractedText);
+      if (!assessment.ok) {
+        console.warn('PDF text extraction rejected:', assessment);
+        alert(assessment.message || 'PDF 文字擷取結果不足，已停止轉換。');
+        return;
+      }
       onTextExtracted(extractedText);
     } catch (error) {
       console.error('Error extracting text:', error);
